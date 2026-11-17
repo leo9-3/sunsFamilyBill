@@ -1,0 +1,64 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>sunsFamilyBill · 家庭账本</title>
+<style>
+  body{font-family:-apple-system,"PingFang SC","Microsoft YaHei",sans-serif;margin:0;background:#f6f7f9;color:#222}
+  header{background:#1f7a4d;color:#fff;padding:16px 20px;font-size:20px;font-weight:600}
+  main{max-width:760px;margin:0 auto;padding:16px}
+  .card{background:#fff;border-radius:10px;padding:14px 16px;margin-bottom:12px;box-shadow:0 1px 3px rgba(0,0,0,.06)}
+  .totals{display:flex;gap:16px;flex-wrap:wrap;font-size:15px}
+  .totals b{font-size:20px}
+  table{width:100%;border-collapse:collapse;font-size:14px}
+  td,th{padding:7px 6px;border-bottom:1px solid #eee;text-align:left}
+  .amt{text-align:right;font-variant-numeric:tabular-nums}
+  input,button,select{font-size:15px;padding:8px;border:1px solid #ccc;border-radius:6px}
+  button{background:#1f7a4d;color:#fff;border:none;cursor:pointer}
+  .del{background:none;color:#c0392b;border:none;cursor:pointer}
+  .hint{color:#777;font-size:13px}
+</style>
+</head>
+<body>
+<header>🏠 sunsFamilyBill 家庭账本</header>
+<main>
+  <div class="card">
+    <label>月份 <input type="month" id="month"></label>
+    <div class="totals" style="margin-top:10px">
+      <span>花销 <b id="exp">¥0.00</b></span>
+      <span>收入 <b id="inc">¥0.00</b></span>
+      <span>笔数 <b id="cnt">0</b></span>
+    </div>
+  </div>
+  <div class="card">
+    <div>补录一笔（一句话就行，和在服务号里发的一样）</div>
+    <div style="margin-top:8px;display:flex;gap:8px">
+      <input id="quick" style="flex:1" placeholder="例：2026-11-17 打车 35">
+      <button id="add">记账</button>
+    </div>
+    <div class="hint" style="margin-top:6px">日常记账直接在微信服务号里发消息即可，这里主要用来看账和补录。</div>
+  </div>
+  <div class="card">
+    <table><thead><tr><th>日期</th><th>事项</th><th>记账人</th><th class="amt">金额</th><th></th></tr></thead><tbody id="rows"></tbody></table>
+  </div>
+</main>
+<script>
+const $=id=>document.getElementById(id);
+const yuan=c=>(c/100).toFixed(2);
+async function load(){
+  const month=$('month').value||new Date().toISOString().slice(0,7);
+  const r=await (await fetch('/api/bills?month='+month)).json();
+  $('exp').textContent='¥'+yuan(r.summary.exp); $('inc').textContent='¥'+yuan(r.summary.inc); $('cnt').textContent=r.summary.n;
+  $('rows').innerHTML=r.bills.map(b=>`<tr><td>${b.date}</td><td>${b.item}</td><td>${b.member||''}</td><td class="amt">${b.kind==='income'?'+':'-'}¥${yuan(b.amount_cents)}</td><td><button class="del" onclick="del(${b.id})">删</button></td></tr>`).join('')||'<tr><td colspan="5" class="hint">这个月还没有账目</td></tr>';
+}
+async function del(id){ await fetch('/api/bills/'+id,{method:'DELETE'}); load(); }
+$('month').value=new Date().toISOString().slice(0,7);
+$('month').onchange=load;
+$('add').onclick=async()=>{ const t=$('quick').value.trim(); if(!t)return;
+  const r=await fetch('/api/bills',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({text:t})});
+  if(r.ok){ $('quick').value=''; load(); } else alert('没解析成功，换个说法试试：日期 事项 金额'); };
+load();
+</script>
+</body>
+</html>

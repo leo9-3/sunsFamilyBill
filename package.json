@@ -1,0 +1,1 @@
+{"description":"家庭记账：微信服务号发消息记账，服务端与数据运行在本机，SQLite 本地存储","engines":{"node":">=22"},"license":"MIT","main":"server.js","name":"sunsfamilybill","private":true,"scripts":{"start":"node server.js","test":"node --test"},"version":"0.1.0"}
