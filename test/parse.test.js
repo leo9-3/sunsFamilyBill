@@ -41,3 +41,21 @@ test('命令：本月 / 删除上一笔 / 查月份', () => {
 test('没有金额 -> unknown', () => {
   assert.equal(parseMessage('今天天气不错', NOW).type, 'unknown');
 });
+test('预算命令：设置本月预算', () => {
+  const p = parseMessage('预算 3000', NOW);
+  assert.equal(p.type, 'command'); assert.equal(p.command, 'set_budget'); assert.equal(p.amountCents, 300000);
+  const q = parseMessage('预算 2500.5元', NOW);
+  assert.equal(q.command, 'set_budget'); assert.equal(q.amountCents, 250050);
+});
+test('预算命令：设置全年预算', () => {
+  const p = parseMessage('全年预算 50000', NOW);
+  assert.equal(p.type, 'command'); assert.equal(p.command, 'set_year_budget'); assert.equal(p.amountCents, 5000000);
+});
+test('预算命令：查预算', () => {
+  assert.equal(parseMessage('查预算', NOW).command, 'budget_query');
+  assert.equal(parseMessage('预算', NOW).command, 'budget_query');
+});
+test('预算命令不会误伤记账：带事项的句子仍是账单', () => {
+  const p = parseMessage('预算外聚餐 120', NOW);
+  assert.equal(p.type, 'bill'); assert.equal(p.amountCents, 12000);
+});

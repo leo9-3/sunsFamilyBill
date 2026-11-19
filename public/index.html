@@ -2,63 +2,378 @@
 <html lang="zh-CN">
 <head>
 <meta charset="utf-8">
-<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <title>sunsFamilyBill · 家庭账本</title>
 <style>
-  body{font-family:-apple-system,"PingFang SC","Microsoft YaHei",sans-serif;margin:0;background:#f6f7f9;color:#222}
-  header{background:#1f7a4d;color:#fff;padding:16px 20px;font-size:20px;font-weight:600}
-  main{max-width:760px;margin:0 auto;padding:16px}
-  .card{background:#fff;border-radius:10px;padding:14px 16px;margin-bottom:12px;box-shadow:0 1px 3px rgba(0,0,0,.06)}
-  .totals{display:flex;gap:16px;flex-wrap:wrap;font-size:15px}
-  .totals b{font-size:20px}
-  table{width:100%;border-collapse:collapse;font-size:14px}
-  td,th{padding:7px 6px;border-bottom:1px solid #eee;text-align:left}
-  .amt{text-align:right;font-variant-numeric:tabular-nums}
-  input,button,select{font-size:15px;padding:8px;border:1px solid #ccc;border-radius:6px}
-  button{background:#1f7a4d;color:#fff;border:none;cursor:pointer}
-  .del{background:none;color:#c0392b;border:none;cursor:pointer}
-  .hint{color:#777;font-size:13px}
+  *{box-sizing:border-box}
+  body{font-family:-apple-system,"PingFang SC","Microsoft YaHei",sans-serif;margin:0;background:#f4f5fa;color:#1c1e26;padding-bottom:76px}
+  /* 顶部渐变头 */
+  .hero{background:linear-gradient(160deg,#4353e8 0%,#6a5cf5 55%,#8b6cf0 100%);color:#fff;padding:18px 18px 64px;border-radius:0 0 22px 22px}
+  .hero-top{display:flex;justify-content:space-between;align-items:center;gap:10px;max-width:860px;margin:0 auto}
+  .hero-title{font-size:20px;font-weight:700}
+  .hero-title small{display:block;font-size:12px;font-weight:400;opacity:.75;margin-top:2px}
+  .month-pick{display:flex;align-items:center;gap:6px}
+  .month-pick button{background:rgba(255,255,255,.18);border:none;color:#fff;width:30px;height:30px;border-radius:50%;font-size:16px;cursor:pointer}
+  .month-pick input{background:rgba(255,255,255,.16);border:1px solid rgba(255,255,255,.35);color:#fff;border-radius:999px;padding:7px 12px;font-size:14px;color-scheme:dark}
+  main{max-width:860px;margin:0 auto;padding:0 14px}
+  /* 大卡片 */
+  .bigcard{background:#fff;border-radius:18px;padding:20px;margin-top:-46px;box-shadow:0 8px 24px rgba(67,83,232,.13)}
+  .bigcard .label{color:#8a8fa3;font-size:14px}
+  .bigcard .balance{font-size:42px;font-weight:800;letter-spacing:-1px;margin:6px 0 18px;font-variant-numeric:tabular-nums}
+  .io-row{display:flex;align-items:center;gap:10px;margin-top:12px;font-size:14px}
+  .io-row .nm{color:#5b5f6e;width:86px;flex:none}
+  .io-row .track{flex:1;height:10px;background:#eef0f6;border-radius:6px;overflow:hidden}
+  .io-row .fill{height:100%;border-radius:6px}
+  .io-row .val{font-weight:700;font-variant-numeric:tabular-nums;white-space:nowrap}
+  .fill-exp{background:#8f8bf5}.fill-inc{background:#d7dbf2}
+  .val-inc{color:#4353e8}
+  /* 预算色带 */
+  .band{margin-top:14px;border-radius:14px;padding:14px 16px;font-size:15px;font-weight:600;background:#ffd83d;color:#4a3200;cursor:pointer;display:flex;justify-content:space-between;align-items:center;gap:8px}
+  .band small{font-weight:400;opacity:.75}
+  .band.over{background:#ffe3e1;color:#8f1d12}
+  .band .arr{font-weight:700}
+  /* 记录区 */
+  .sec-head{display:flex;justify-content:space-between;align-items:center;margin:22px 2px 10px}
+  .sec-head h2{font-size:19px;margin:0}
+  .addbtn{background:#4353e8;color:#fff;border:none;border-radius:999px;padding:9px 18px;font-size:14px;font-weight:600;cursor:pointer;box-shadow:0 4px 12px rgba(67,83,232,.35)}
+  .quickadd{display:none;background:#fff;border-radius:14px;padding:12px;margin-bottom:12px;box-shadow:0 2px 8px rgba(0,0,0,.05)}
+  .quickadd.on{display:flex;gap:8px}
+  .quickadd input{flex:1;font-size:15px;padding:10px;border:1px solid #dfe2ee;border-radius:10px;min-width:0}
+  .quickadd button{background:#4353e8;color:#fff;border:none;border-radius:10px;padding:10px 16px;cursor:pointer}
+  .daycard{background:#fff;border-radius:16px;padding:6px 16px 10px;margin-bottom:12px;box-shadow:0 2px 8px rgba(0,0,0,.04)}
+  .day-head{display:flex;justify-content:space-between;align-items:baseline;padding:12px 0 4px;font-size:14px}
+  .day-head .d{font-weight:600}
+  .day-head .s{color:#8a8fa3;font-size:13px;font-variant-numeric:tabular-nums}
+  .rec{display:flex;gap:12px;align-items:center;padding:12px 0;border-top:1px dashed #eceef5}
+  .tile{width:46px;height:46px;flex:none;border-radius:14px;display:flex;align-items:center;justify-content:center;font-size:19px;font-weight:600}
+  .tile.exp{background:#ffe9e4;color:#e0643c}.tile.inc{background:#e4ebff;color:#4353e8}
+  .rec .mid{flex:1;min-width:0}
+  .rec .t{font-size:16px;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+  .rec .sub{color:#9aa0b4;font-size:13px;margin-top:3px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+  .rec .right{text-align:right;flex:none}
+  .rec .amt{font-size:17px;font-weight:700;font-variant-numeric:tabular-nums}
+  .rec .amt.inc{color:#4353e8}
+  .rec .del{background:none;border:none;color:#c3c7d4;font-size:12px;cursor:pointer;padding:2px 0 0}
+  .empty{color:#9aa0b4;text-align:center;padding:26px 0;font-size:14px}
+  /* 通用卡片（全年/搜索/设置） */
+  .card{background:#fff;border-radius:16px;padding:16px;margin-bottom:12px;box-shadow:0 2px 8px rgba(0,0,0,.04)}
+  .card h3{margin:0 0 10px;font-size:16px}
+  .row{display:flex;gap:8px;align-items:center;flex-wrap:wrap}
+  .row input[type=number],.row input[type=text],.row input[type=password],.row input[type=month]{font-size:15px;padding:9px;border:1px solid #dfe2ee;border-radius:10px}
+  .btn{background:#4353e8;color:#fff;border:none;border-radius:10px;padding:9px 16px;font-size:14px;cursor:pointer}
+  .btn.ghost{background:#eceef7;color:#3c4054}
+  .hint{color:#9aa0b4;font-size:13px}
+  .over-txt{color:#d92d20;font-weight:600}
+  .mrow{display:flex;justify-content:space-between;align-items:center;padding:13px 2px;border-top:1px dashed #eceef5;cursor:pointer;font-size:15px}
+  .mrow:first-of-type{border-top:none}
+  .mrow .mm{font-weight:600;width:86px}
+  .mrow .mv{font-variant-numeric:tabular-nums;color:#5b5f6e}
+  .mrow .mv b{color:#1c1e26}
+  .totals{display:flex;gap:18px;flex-wrap:wrap;font-size:14px;color:#5b5f6e}
+  .totals b{display:block;font-size:20px;color:#1c1e26;margin-top:2px}
+  .bar{height:8px;background:#eef0f6;border-radius:4px;overflow:hidden;margin-top:8px}
+  .bar>div{height:100%;background:#6a5cf5}.bar>div.over{background:#d92d20}
+  .view{display:none}.view.on{display:block}
+  /* 底部标签栏 */
+  nav{position:fixed;left:0;right:0;bottom:0;background:#fff;border-top:1px solid #eceef5;display:flex;padding:8px 0 calc(8px + env(safe-area-inset-bottom));z-index:10}
+  nav button{flex:1;background:none;border:none;font-size:13px;color:#9aa0b4;cursor:pointer;padding:4px 0}
+  nav button .ic{display:block;font-size:19px;line-height:1.25}
+  nav button.on{color:#4353e8;font-weight:700}
 </style>
 </head>
 <body>
-<header>🏠 sunsFamilyBill 家庭账本</header>
-<main>
-  <div class="card">
-    <label>月份 <input type="month" id="month"></label>
-    <div class="totals" style="margin-top:10px">
-      <span>花销 <b id="exp">¥0.00</b></span>
-      <span>收入 <b id="inc">¥0.00</b></span>
-      <span>笔数 <b id="cnt">0</b></span>
+<div class="hero">
+  <div class="hero-top">
+    <div class="hero-title">家庭账本<small>sunsFamilyBill · 美人鱼的记账故事</small></div>
+    <div class="month-pick">
+      <button id="mPrev" title="上月">‹</button>
+      <input type="month" id="month">
+      <button id="mNext" title="下月">›</button>
     </div>
   </div>
-  <div class="card">
-    <div>补录一笔（一句话就行，和在服务号里发的一样）</div>
-    <div style="margin-top:8px;display:flex;gap:8px">
-      <input id="quick" style="flex:1" placeholder="例：2026-11-17 打车 35">
+</div>
+
+<main>
+  <!-- 月账 -->
+  <section id="v-month" class="view on">
+    <div class="bigcard">
+      <div class="label">本月结余（元）</div>
+      <div class="balance" id="balance">0.00</div>
+      <div class="io-row"><span class="nm">本月支出</span><div class="track"><div class="fill fill-exp" id="expBar" style="width:0%"></div></div><span class="val" id="expVal">-0.00</span></div>
+      <div class="io-row"><span class="nm">本月收入</span><div class="track"><div class="fill fill-inc" id="incBar" style="width:0%"></div></div><span class="val val-inc" id="incVal">+0.00</span></div>
+      <div class="band" id="budgetBand"><span id="bandText">本月预算</span><span class="arr">›</span></div>
+    </div>
+    <div class="sec-head"><h2>收支记录</h2><button class="addbtn" id="addToggle">✎ 记一笔</button></div>
+    <div class="quickadd" id="quickAdd">
+      <input id="quick" placeholder="例：2026-11-17 打车 35">
       <button id="add">记账</button>
     </div>
-    <div class="hint" style="margin-top:6px">日常记账直接在微信服务号里发消息即可，这里主要用来看账和补录。</div>
-  </div>
-  <div class="card">
-    <table><thead><tr><th>日期</th><th>事项</th><th>记账人</th><th class="amt">金额</th><th></th></tr></thead><tbody id="rows"></tbody></table>
-  </div>
+    <div id="dayList"></div>
+  </section>
+
+  <!-- 全年总览 -->
+  <section id="v-year" class="view">
+    <div style="height:14px"></div>
+    <div class="card">
+      <div class="row">
+        <button class="btn ghost" id="yPrev">‹ 上一年</button>
+        <input type="number" id="year" style="width:96px">
+        <button class="btn ghost" id="yNext">下一年 ›</button>
+      </div>
+      <div class="totals" style="margin-top:14px">
+        <span>全年花销<b id="yExp">¥0.00</b></span>
+        <span>全年收入<b id="yInc">¥0.00</b></span>
+        <span>结余<b id="yBal">¥0.00</b></span>
+        <span>笔数<b id="yCnt">0</b></span>
+      </div>
+      <div class="hint" id="yBudgetInfo" style="margin-top:10px"></div>
+      <div class="bar"><div id="yBar" style="width:0%"></div></div>
+    </div>
+    <div class="card"><h3>各月汇总</h3><div id="yRows"></div>
+      <div class="hint" style="margin-top:6px">点任意月份进入该月账单。</div>
+    </div>
+  </section>
+
+  <!-- 搜索 -->
+  <section id="v-search" class="view">
+    <div style="height:14px"></div>
+    <div class="card">
+      <div class="row">
+        <input id="q" type="text" style="flex:1" placeholder="关键字：事项、原始消息或成员名">
+        <button class="btn" id="doSearch">搜索</button>
+      </div>
+      <div class="totals" style="margin-top:12px">
+        <span>命中<b id="sCnt">0 笔</b></span>
+        <span>花销合计<b id="sExp">¥0.00</b></span>
+        <span>收入合计<b id="sInc">¥0.00</b></span>
+      </div>
+    </div>
+    <div id="sList"></div>
+  </section>
+
+  <!-- 设置 -->
+  <section id="v-admin" class="view">
+    <div style="height:14px"></div>
+    <div class="card">
+      <h3>预算设置</h3>
+      <div class="row">
+        <span>月预算</span><input type="month" id="bMonth">
+        <input type="number" id="bMonthVal" placeholder="金额（元）" style="width:120px">
+        <button class="btn" id="bMonthSave">保存</button>
+        <button class="btn ghost" id="bMonthClear">清除</button>
+      </div>
+      <div class="row" style="margin-top:10px">
+        <span>年预算</span><input type="number" id="bYear" style="width:96px">
+        <input type="number" id="bYearVal" placeholder="金额（元）" style="width:120px">
+        <button class="btn" id="bYearSave">保存</button>
+        <button class="btn ghost" id="bYearClear">清除</button>
+      </div>
+      <div class="hint" style="margin-top:8px">也可以在微信里发「预算 3000」「全年预算 50000」「查预算」。</div>
+    </div>
+    <div class="card">
+      <h3>家庭成员改名</h3>
+      <div id="members"></div>
+      <div class="hint">改名后微信回复和账单都用新名；名字留空保存 = 恢复默认名。</div>
+    </div>
+    <div class="card">
+      <h3>管理口令</h3>
+      <div class="row">
+        <input id="newPass" type="password" placeholder="新口令（至少 4 位）" style="flex:1">
+        <button class="btn" id="passSave">修改口令</button>
+      </div>
+      <div class="hint" style="margin-top:6px">改完后其他设备上的旧登录会失效。</div>
+      <div class="row" style="margin-top:12px"><button class="btn ghost" id="logout">退出登录</button></div>
+    </div>
+  </section>
 </main>
+
+<nav>
+  <button data-v="month" class="on"><span class="ic">📒</span>月账</button>
+  <button data-v="year"><span class="ic">📊</span>全年总览</button>
+  <button data-v="search"><span class="ic">🔍</span>搜索</button>
+  <button data-v="admin"><span class="ic">⚙️</span>设置</button>
+</nav>
+
 <script>
 const $=id=>document.getElementById(id);
 const yuan=c=>(c/100).toFixed(2);
-async function load(){
-  const month=$('month').value||new Date().toISOString().slice(0,7);
-  const r=await (await fetch('/api/bills?month='+month)).json();
-  $('exp').textContent='¥'+yuan(r.summary.exp); $('inc').textContent='¥'+yuan(r.summary.inc); $('cnt').textContent=r.summary.n;
-  $('rows').innerHTML=r.bills.map(b=>`<tr><td>${b.date}</td><td>${b.item}</td><td>${b.member||''}</td><td class="amt">${b.kind==='income'?'+':'-'}¥${yuan(b.amount_cents)}</td><td><button class="del" onclick="del(${b.id})">删</button></td></tr>`).join('')||'<tr><td colspan="5" class="hint">这个月还没有账目</td></tr>';
+const esc=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+const WEEK=['星期日','星期一','星期二','星期三','星期四','星期五','星期六'];
+async function api(path,opts){
+  const r=await fetch(path,opts);
+  if(r.status===401){ location.reload(); throw new Error('unauthorized'); }
+  return r;
 }
-async function del(id){ await fetch('/api/bills/'+id,{method:'DELETE'}); load(); }
+const budgetsCache={};
+async function loadBudgets(){
+  const r=await (await api('/api/budgets')).json();
+  Object.keys(budgetsCache).forEach(k=>delete budgetsCache[k]);
+  Object.assign(budgetsCache,r.budgets||{});
+}
+function shiftMonth(monthStr,d){
+  const [y,m]=monthStr.split('-').map(Number);
+  const dt=new Date(y,m-1+d,1);
+  return dt.getFullYear()+'-'+String(dt.getMonth()+1).padStart(2,'0');
+}
+function dayLabel(dateStr){
+  const [y,m,d]=dateStr.split('-').map(Number);
+  return `${m}月${d}日 ${WEEK[new Date(y,m-1,d).getDay()]}`;
+}
+function timeOf(iso){ const d=new Date(iso); return String(d.getHours()).padStart(2,'0')+':'+String(d.getMinutes()).padStart(2,'0'); }
+function recRow(b,showDate){
+  const inc=b.kind==='income';
+  const sub=[showDate?b.date:null, timeOf(b.created_at), (b.raw&&b.raw!==b.item)?b.raw:null, b.member||null].filter(Boolean).join(' | ');
+  return `<div class="rec">
+    <div class="tile ${inc?'inc':'exp'}">${esc((b.item||'账').slice(0,1))}</div>
+    <div class="mid"><div class="t">${esc(b.item)}</div><div class="sub">${esc(sub)}</div></div>
+    <div class="right"><div class="amt ${inc?'inc':''}">${inc?'+':'-'} ¥${yuan(b.amount_cents)}</div>
+    <button class="del" onclick="delBill(${b.id})">删除</button></div></div>`;
+}
+
+/* ---- 月账 ---- */
+async function loadMonth(){
+  await loadBudgets();
+  const month=$('month').value||new Date().toISOString().slice(0,7);
+  const r=await (await api('/api/bills?month='+month)).json();
+  const {exp,inc}=r.summary;
+  $('balance').textContent=(inc-exp>=0?'':'-')+yuan(Math.abs(inc-exp));
+  const mx=Math.max(exp,inc,1);
+  $('expBar').style.width=(exp/mx*100)+'%'; $('incBar').style.width=(inc/mx*100)+'%';
+  $('expVal').textContent='-'+yuan(exp); $('incVal').textContent='+'+yuan(inc);
+  // 预算色带
+  const band=$('budgetBand'), txt=$('bandText');
+  const mb=budgetsCache[month], yb=budgetsCache[month.slice(0,4)];
+  band.classList.remove('over');
+  if(mb!=null){
+    const rem=mb-exp;
+    if(rem>=0){
+      const now=new Date(); let extra='';
+      if(month===now.toISOString().slice(0,7)){
+        const daysIn=new Date(now.getFullYear(),now.getMonth()+1,0).getDate();
+        const left=daysIn-now.getDate()+1;
+        extra=`，日均可消费 ¥${yuan(Math.floor(rem/left))}`;
+      }
+      txt.innerHTML=`本月预算剩余 ¥${yuan(rem)}${extra}`;
+    } else { band.classList.add('over'); txt.innerHTML=`本月已超支 ¥${yuan(-rem)} <small>（预算 ¥${yuan(mb)}）</small>`; }
+  } else if(yb!=null){
+    const yr=await (await api('/api/year?year='+month.slice(0,4))).json();
+    txt.innerHTML=`全年预算剩余 ¥${yuan(yb-yr.totals.exp)} <small>· 点这里设置本月预算</small>`;
+  } else {
+    txt.innerHTML=`还没设预算 <small>· 点这里去设置本月预算</small>`;
+  }
+  // 按天分组
+  const groups={};
+  for(const b of r.bills){ (groups[b.date]=groups[b.date]||[]).push(b); }
+  const dates=Object.keys(groups).sort().reverse();
+  $('dayList').innerHTML=dates.map(d=>{
+    const list=groups[d];
+    const de=list.filter(b=>b.kind!=='income').reduce((a,b)=>a+b.amount_cents,0);
+    const di=list.filter(b=>b.kind==='income').reduce((a,b)=>a+b.amount_cents,0);
+    return `<div class="daycard"><div class="day-head"><span class="d">${dayLabel(d)}</span>
+      <span class="s">支出：¥${yuan(de)}&nbsp;&nbsp;收入：¥${yuan(di)}</span></div>
+      ${list.map(b=>recRow(b,false)).join('')}</div>`;
+  }).join('')||'<div class="daycard"><div class="empty">这个月还没有账目，在微信里发一句话就能记</div></div>';
+}
+async function delBill(id){ if(!confirm('删除这笔账？'))return; await api('/api/bills/'+id,{method:'DELETE'}); loadMonth(); }
+
+/* ---- 全年 ---- */
+async function loadYear(){
+  await loadBudgets();
+  const year=$('year').value||String(new Date().getFullYear());
+  const r=await (await api('/api/year?year='+year)).json();
+  window._yearExpCache=r.totals.exp;
+  $('yExp').textContent='¥'+yuan(r.totals.exp); $('yInc').textContent='¥'+yuan(r.totals.inc);
+  $('yBal').textContent='¥'+yuan(r.totals.inc-r.totals.exp); $('yCnt').textContent=r.totals.n;
+  const info=$('yBudgetInfo'), bar=$('yBar');
+  if(r.yearBudget==null){ info.textContent='全年预算未设置（到「设置」页添加）'; bar.style.width='0%'; }
+  else{
+    const rem=r.yearBudgetRemaining;
+    info.innerHTML=`全年预算 ¥${yuan(r.yearBudget)}，已用 ¥${yuan(r.totals.exp)}，`+(rem>=0?`剩余 ¥${yuan(rem)}`:`<span class="over-txt">已超支 ¥${yuan(-rem)}</span>`);
+    bar.style.width=Math.min(100,r.totals.exp/r.yearBudget*100)+'%'; bar.className=rem<0?'over':'';
+  }
+  $('yRows').innerHTML=r.months.map(m=>`<div class="mrow" onclick="gotoMonth('${m.month}')">
+    <span class="mm">${m.month.slice(5)}月</span>
+    <span class="mv">支出 <b>¥${yuan(m.exp)}</b></span>
+    <span class="mv">收入 <b>¥${yuan(m.inc)}</b></span>
+    <span class="mv">${m.budget==null?'':'预算 ¥'+yuan(m.budget)}</span>
+    <span class="mv">${m.n} 笔 ›</span></div>`).join('');
+}
+function gotoMonth(month){ $('month').value=month; switchView('month'); }
+
+/* ---- 搜索 ---- */
+async function doSearch(){
+  const q=$('q').value.trim(); if(!q) return;
+  const r=await (await api('/api/search?q='+encodeURIComponent(q))).json();
+  $('sCnt').textContent=r.summary.n+' 笔'; $('sExp').textContent='¥'+yuan(r.summary.exp); $('sInc').textContent='¥'+yuan(r.summary.inc);
+  $('sList').innerHTML=r.bills.length? `<div class="daycard">${r.bills.map(b=>recRow(b,true)).join('')}</div>`
+    : '<div class="daycard"><div class="empty">没有搜到</div></div>';
+}
+
+/* ---- 设置 ---- */
+async function loadAdmin(){
+  await loadBudgets();
+  const month=$('month').value||new Date().toISOString().slice(0,7);
+  $('bMonth').value=month;
+  $('bMonthVal').value=budgetsCache[month]==null?'':budgetsCache[month]/100;
+  $('bYear').value=month.slice(0,4);
+  $('bYearVal').value=budgetsCache[month.slice(0,4)]==null?'':budgetsCache[month.slice(0,4)]/100;
+  const r=await (await api('/api/members')).json();
+  $('members').innerHTML=r.members.length? r.members.map(m=>`<div class="row" style="margin-bottom:8px">
+    <span class="hint" style="width:52px">…${esc(m.short)}</span>
+    <input type="text" id="mem-${CSS.escape(m.openid)}" value="${esc(m.name)}" style="flex:1;min-width:0">
+    <span class="hint">${m.count} 笔</span>
+    <button class="btn" onclick="saveMember('${m.openid}')">保存</button></div>`).join('')
+    : '<div class="hint">还没有成员记过账</div>';
+}
+async function saveMember(openid){
+  const name=document.getElementById('mem-'+CSS.escape(openid)).value;
+  await api('/api/members',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({openid,name})});
+  loadAdmin();
+}
+async function saveBudget(key,val,clear){
+  if(clear){ await api('/api/budgets/'+encodeURIComponent(key),{method:'DELETE'}); }
+  else{
+    if(!(Number(val)>0)) return alert('预算金额要大于 0');
+    await api('/api/budgets',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({key,amount:Number(val)})});
+  }
+  loadAdmin();
+}
+
+/* ---- 视图切换 ---- */
+function switchView(v){
+  document.querySelectorAll('nav button').forEach(b=>b.classList.toggle('on',b.dataset.v===v));
+  document.querySelectorAll('.view').forEach(s=>s.classList.toggle('on',s.id==='v-'+v));
+  if(v==='year') loadYear(); if(v==='month') loadMonth(); if(v==='admin') loadAdmin();
+  window.scrollTo(0,0);
+}
+document.querySelectorAll('nav button').forEach(b=>b.onclick=()=>switchView(b.dataset.v));
+
+/* ---- 事件 ---- */
 $('month').value=new Date().toISOString().slice(0,7);
-$('month').onchange=load;
+$('year').value=new Date().getFullYear();
+$('mPrev').onclick=()=>{ $('month').value=shiftMonth($('month').value,-1); loadMonth(); };
+$('mNext').onclick=()=>{ $('month').value=shiftMonth($('month').value,1); loadMonth(); };
+$('month').onchange=loadMonth;
+$('yPrev').onclick=()=>{ $('year').value=Number($('year').value)-1; loadYear(); };
+$('yNext').onclick=()=>{ $('year').value=Number($('year').value)+1; loadYear(); };
+$('year').onchange=loadYear;
+$('budgetBand').onclick=()=>switchView('admin');
+$('addToggle').onclick=()=>$('quickAdd').classList.toggle('on');
 $('add').onclick=async()=>{ const t=$('quick').value.trim(); if(!t)return;
-  const r=await fetch('/api/bills',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({text:t})});
-  if(r.ok){ $('quick').value=''; load(); } else alert('没解析成功，换个说法试试：日期 事项 金额'); };
-load();
+  const r=await api('/api/bills',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({text:t})});
+  if(r.ok){ $('quick').value=''; $('quickAdd').classList.remove('on'); loadMonth(); } else alert('没解析成功，换个说法试试：日期 事项 金额'); };
+$('doSearch').onclick=doSearch;
+$('q').addEventListener('keydown',e=>{ if(e.key==='Enter') doSearch(); });
+$('bMonthSave').onclick=()=>saveBudget($('bMonth').value,$('bMonthVal').value,false);
+$('bMonthClear').onclick=()=>saveBudget($('bMonth').value,0,true);
+$('bYearSave').onclick=()=>saveBudget($('bYear').value,$('bYearVal').value,false);
+$('bYearClear').onclick=()=>saveBudget($('bYear').value,0,true);
+$('passSave').onclick=async()=>{
+  const v=$('newPass').value; if(v.length<4) return alert('新口令至少 4 位');
+  const r=await api('/api/settings/password',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({newPass:v})});
+  if(r.ok){ $('newPass').value=''; alert('口令已修改'); } else alert('修改失败'); };
+$('logout').onclick=async()=>{ await fetch('/logout',{method:'POST'}); location.reload(); };
+loadMonth();
 </script>
 </body>
 </html>
